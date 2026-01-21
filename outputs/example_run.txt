@@ -1,5 +1,2 @@
-APPROVED CHANGES
+ITINERARY CHANGES (APPROVED)
 - [evt_ab12cd34ef56] 2026-02-03 | Heavy snow warning for Sapporo | Advisory indicates heavy snowfall risk that could affect transfers | Move evening walk to indoor mall and end by 20:30
-
-REJECTED CHANGES
-- [evt_98fe76dc54ba] 2026-03-12 | Kyoto lantern walk date clash | Event listing shows different date than itinerary | Replace lantern walk with riverside market visit

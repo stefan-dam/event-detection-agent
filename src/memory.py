@@ -16,6 +16,7 @@ class MemoryStore:
             "history": [],
             "run_count": 0,
             "rejections": {},
+            "pending_event_ids": [],
         }
         self.load()
 

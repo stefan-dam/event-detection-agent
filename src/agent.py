@@ -217,6 +217,21 @@ def _filter_opportunities(events: EventList, allowed_terms: List[str]) -> None:
     events.events = filtered
 
 
+def _filter_solution_quality(events: EventList, min_length: int = 20) -> bool:
+    filtered = []
+    removed = False
+    for event in events.events:
+        if len(event.recommendation.strip()) < min_length:
+            removed = True
+            continue
+        if len(event.proposed_change.strip()) < min_length:
+            removed = True
+            continue
+        filtered.append(event)
+    events.events = filtered
+    return removed
+
+
 def detect_events(
     agent: AgentExecutor,
     preferences: str,
@@ -261,6 +276,7 @@ def detect_events(
         _filter_hazards(events)
         allowed_terms = list(context.get("cities", [])) + list(context.get("locations", []))
         _filter_opportunities(events, allowed_terms)
+        solutions_filtered = _filter_solution_quality(events)
 
         usage = _collect_tool_usage(result.get("intermediate_steps", []))
         source_urls = _extract_source_urls(events)
@@ -284,7 +300,13 @@ def detect_events(
             for category in required_categories
         )
 
-        if has_required_tools and not missing_sources and has_required_categories and not invalid_dates:
+        if (
+            has_required_tools
+            and not missing_sources
+            and has_required_categories
+            and not invalid_dates
+            and not solutions_filtered
+        ):
             last_events = events
             break
 
@@ -297,12 +319,15 @@ def detect_events(
             queries_blob += "\nScrape these URLs: " + ", ".join(missing_sources)
         if invalid_dates:
             queries_blob += "\nUse ISO dates only (YYYY-MM-DD) for event.date."
+        if solutions_filtered:
+            queries_blob += "\nProvide concrete recommendation and proposed_change with at least 20 characters."
 
     events = last_events or EventList()
     _assign_event_ids(events)
     _filter_hazards(events)
     allowed_terms = list(context.get("cities", [])) + list(context.get("locations", []))
     _filter_opportunities(events, allowed_terms)
+    _filter_solution_quality(events)
 
     # Filter by itinerary date range if possible
     date_min = context.get("date_min", "")

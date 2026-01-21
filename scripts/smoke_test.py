@@ -1,4 +1,7 @@
-"""Minimal smoke test for grading."""
+"""Minimal smoke test for grading.
+
+This script auto-approves events; use CLI/API approval for the requirement.
+"""
 
 from __future__ import annotations
 

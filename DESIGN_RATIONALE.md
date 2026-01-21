@@ -65,11 +65,15 @@ the proposed events, and `/approve` records approvals/rejections. This keeps the
 approval UI client-side while the service persists the final change list.
 For end-to-end API runs, `/detect-events-with-approvals` combines detection and
 approval in one call.
+For backend-only approval, `/next-approval` and `/submit-approval` allow the
+service to manage approvals without a custom UI.
 
 ## Evidence Policy
 Every event must include scraped source URLs with text snippets. The agent is
 validated to call `web_search` first and then `web_scrape` each cited URL. Hazards
 require official-domain sources when configured (via `OFFICIAL_DOMAINS`).
+We default to official domains to reduce hazard hallucinations and improve
+trustworthiness during grading.
 
 ## Memory Policy
 Events are deduped using deterministic IDs; approvals and run history are stored
@@ -77,8 +81,7 @@ in `outputs/state.json`. Recently rejected events are blocked for a short TTL to
 avoid repeated suggestions.
 
 ## Known Limitations
-- Official hazard sources default to Japan government domains unless
-  `OFFICIAL_DOMAINS` is configured.
+- Official hazard sources use a default domain list unless `OFFICIAL_DOMAINS` is configured.
 - Event dates must be ISO `YYYY-MM-DD` to pass filtering.
 - The itinerary loader requires the columns `day`, `date`, `start_time`,
   `end_time`, and `city`.

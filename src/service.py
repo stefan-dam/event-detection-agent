@@ -77,19 +77,9 @@ def _build_change_records(memory: MemoryStore) -> dict:
 def _write_outputs(memory: MemoryStore, output_path: str, json_output: str) -> None:
     payload = _build_change_records(memory)
     lines: List[str] = []
-    lines.append("APPROVED CHANGES")
+    lines.append("ITINERARY CHANGES (APPROVED)")
     if payload["approved"]:
         for change in payload["approved"]:
-            lines.append(
-                f"- [{change['id']}] {change['date']} | {change['title']} "
-                f"| {change['rationale']} | {change['proposed_change']}"
-            )
-    else:
-        lines.append("- None")
-    lines.append("")
-    lines.append("REJECTED CHANGES")
-    if payload["rejected"]:
-        for change in payload["rejected"]:
             lines.append(
                 f"- [{change['id']}] {change['date']} | {change['title']} "
                 f"| {change['rationale']} | {change['proposed_change']}"
@@ -146,6 +136,11 @@ def detect_events_endpoint(request: DetectRequest) -> dict:
     )
 
     memory.add_events([e.model_dump() for e in events.events])
+    memory.state["pending_event_ids"] = [
+        event.id
+        for event in events.events
+        if event.id not in memory.state.get("approvals", {})
+    ]
     memory.add_history(f"API run completed with {len(events.events)} events.")
     memory.save()
 
@@ -192,6 +187,11 @@ def detect_events_with_approvals(request: DetectWithApprovalsRequest) -> dict:
     )
 
     memory.add_events([e.model_dump() for e in events.events])
+    memory.state["pending_event_ids"] = [
+        event.id
+        for event in events.events
+        if event.id not in memory.state.get("approvals", {})
+    ]
 
     for event in events.events:
         approved = request.approvals.get(event.id)
@@ -217,10 +217,55 @@ def detect_events_with_approvals(request: DetectWithApprovalsRequest) -> dict:
     }
 
 
+def _get_event_by_id(memory: MemoryStore, event_id: str) -> dict | None:
+    for event in memory.state.get("events", []):
+        if event.get("id") == event_id:
+            return event
+    return None
+
+
+@app.get("/next-approval")
+def next_approval_endpoint() -> dict:
+    memory = MemoryStore("outputs/state.json")
+    pending = memory.state.get("pending_event_ids", [])
+    if not pending:
+        return {"event": None}
+    event_id = pending[0]
+    event = _get_event_by_id(memory, event_id)
+    return {"event": event}
+
+
+@app.post("/submit-approval")
+def submit_approval_endpoint(request: ApproveRequest) -> dict:
+    memory = MemoryStore("outputs/state.json")
+    memory.set_approval(request.event_id, request.approved)
+    pending = memory.state.get("pending_event_ids", [])
+    if request.event_id in pending:
+        pending.remove(request.event_id)
+        memory.state["pending_event_ids"] = pending
+    memory.add_history(
+        f"Approval updated: {request.event_id} -> {request.approved}"
+    )
+    memory.save()
+
+    _write_outputs(memory, "outputs/itinerary_changes.txt", "outputs/itinerary_changes.json")
+    approved_changes = _build_change_records(memory)["approved"]
+    if approved_changes:
+        original_rows = memory.state.get("last_itinerary_rows", [])
+        if original_rows:
+            updated_rows = apply_changes(original_rows, approved_changes)
+            write_updated_itinerary(updated_rows, "outputs/Itinerary_updated.xlsx")
+    return {"status": "ok", "event_id": request.event_id, "approved": request.approved}
+
+
 @app.post("/approve")
 def approve_endpoint(request: ApproveRequest) -> dict:
     memory = MemoryStore("outputs/state.json")
     memory.set_approval(request.event_id, request.approved)
+    pending = memory.state.get("pending_event_ids", [])
+    if request.event_id in pending:
+        pending.remove(request.event_id)
+        memory.state["pending_event_ids"] = pending
     memory.add_history(
         f"Approval updated: {request.event_id} -> {request.approved}"
     )
