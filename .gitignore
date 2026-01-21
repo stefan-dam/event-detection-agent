@@ -1,0 +1,9 @@
+__pycache__/
+.venv/
+.env
+*.pyc
+.pytest_cache/
+outputs/state.json
+outputs/itinerary_changes.txt
+outputs/itinerary_changes.json
+outputs/Itinerary_updated.xlsx

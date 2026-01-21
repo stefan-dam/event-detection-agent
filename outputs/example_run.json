@@ -1,0 +1,30 @@
+{
+  "approved": [
+    {
+      "id": "evt_ab12cd34ef56",
+      "date": "2026-02-03",
+      "title": "Heavy snow warning for Sapporo",
+      "rationale": "Advisory indicates heavy snowfall risk that could affect transfers",
+      "proposed_change": "Move evening walk to indoor mall and end by 20:30",
+      "itinerary_day": "1",
+      "itinerary_row_id": "2",
+      "change_type": "move",
+      "new_time": "18:00-20:30",
+      "new_location": "Sapporo Station underground mall"
+    }
+  ],
+  "rejected": [
+    {
+      "id": "evt_98fe76dc54ba",
+      "date": "2026-03-12",
+      "title": "Kyoto lantern walk date clash",
+      "rationale": "Event listing shows different date than itinerary",
+      "proposed_change": "Replace lantern walk with riverside market visit",
+      "itinerary_day": "12",
+      "itinerary_row_id": "12",
+      "change_type": "replace",
+      "new_time": "17:00-20:00",
+      "new_location": "Gion district market"
+    }
+  ]
+}

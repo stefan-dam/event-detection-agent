@@ -1,0 +1,12 @@
+langchain==0.2.14
+langchain-groq==0.1.9
+langchain-core==0.2.38
+pydantic==2.8.2
+pandas==2.3.3
+openpyxl==3.1.5
+python-docx==1.2.0
+requests==2.32.3
+beautifulsoup4==4.12.3
+fastapi==0.115.0
+uvicorn==0.30.6
+pytest==8.3.3
